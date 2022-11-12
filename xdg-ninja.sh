@@ -63,11 +63,14 @@ help() {
 
     ${FX_ITALIC}--skip-ok${FX_RESET}           ${FX_BOLD}Don't display anything for files that do not exist (default)${FX_RESET}
 
+    ${FX_ITALIC}--skip-unsupported${FX_RESET}  ${FX_BOLD}Don't display anything for files that do not have fixes available${FX_RESET}
+
     """
     printf "%b" "$HELPSTRING"
 }
 
 SKIP_OK=true
+SKIP_UNSUPPORTED=false
 for i in "$@"; do
     if [ "$i" = "--help" ] || [ "$i" = "-h" ]; then
         help
@@ -76,6 +79,8 @@ for i in "$@"; do
         SKIP_OK=true
     elif [ "$i" = "--no-skip-ok" ]; then
         SKIP_OK=false
+    elif [ "$i" = "--skip-unsupported" ]; then
+        SKIP_UNSUPPORTED=true
     elif [ "$i" = "-v" ]; then
         SKIP_OK=false
     fi
@@ -136,6 +141,9 @@ decode_string() {
 /' # Replace \n with literal newline and \" with ", normalize number of trailing newlines to 2
 }
 
+# Counter to keep track of how many files can be moved
+FIXABLE=0
+
 # Function to handle the formatting of output
 log() {
     MODE="$1"
@@ -147,10 +155,12 @@ log() {
 
     ERR)
         printf '[%b%s%b]: %b%s%b\n' "${FX_BOLD}${FG_RED}" "$NAME" "${FX_RESET}" "${FX_BOLD}${FX_ITALIC}" "$FILENAME" "${FX_RESET}"
+        FIXABLE=$((FIXABLE+1))
         ;;
 
     WARN)
-        printf '[%b%s%b]: %b%s%b\n' "${FX_BOLD}${FG_YELLOW}" "$NAME" "${FX_RESET}" "${FX_BOLD}${FX_ITALIC}" "$FILENAME" "${FX_RESET}"
+        [ "$SKIP_UNSUPPORTED" = false ] &&
+            printf '[%b%s%b]: %b%s%b\n' "${FX_BOLD}${FG_YELLOW}" "$NAME" "${FX_RESET}" "${FX_BOLD}${FX_ITALIC}" "$FILENAME" "${FX_RESET}"
         ;;
 
     INFO)
@@ -191,7 +201,9 @@ check_file() {
             log WARN "$NAME" "$FILENAME" "$HELP"
         fi
         if [ "$HELP" ]; then
-            log HELP "$NAME" "$FILENAME" "$HELP"
+            if [ "$MOVABLE" = true ] || [ "$SKIP_UNSUPPORTED" = false ]; then
+                log HELP "$NAME" "$FILENAME" "$HELP"
+            fi
         else
             log HELP "$NAME" "$FILENAME" "_No help available._"
         fi
@@ -221,5 +233,9 @@ check_programs() {
     printf "\n"
 }
 
-
 check_programs
+if [ $FIXABLE -gt 100 ]; then
+    exit 101
+else
+    exit $FIXABLE
+fi
