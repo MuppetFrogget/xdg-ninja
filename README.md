@@ -15,6 +15,13 @@ The configurations are from the [arch wiki page on XDG_BASE_DIR](https://wiki.ar
 
 ## Running
 
+### Using nix
+
+If you're using [nix](https://nixos.org) and have flakes turned on, you can just run the following command:
+```sh
+nix run github:b3nj5m1n/xdg-ninja
+```
+
 ### Cloning Manually
 
 Clone the repository somewhere, then run the _./xdg-ninja.sh_ script.
@@ -36,7 +43,7 @@ To install xdg-ninja with [Homebrew](https://brew.sh), run `brew install xdg-nin
 
 ## Configuration
 
-The configuration is done in the _programs/_ directory.
+The configuration is done in the _programs/_ directory, which should be located in the same working directory as the xdg-ninja.sh script. This can be overriden with the `XN_PROGRAMS_DIR` environment variable.
 
 You define a program, and then a list of files and directories which this program ruthlessly puts into your _$HOME_ directory.
 
@@ -48,13 +55,21 @@ Files in this directory can have any name, but using the name of the program is 
 
 ### Automatically Generating Configuration
 
-You can download the _xdgnj_ executable from the releases page. Alternatively you can build it from scratch using _cabal_, _stack_, or the provided docker image in _build/_. (To be clear, this is just a tool that will help you automatically generate the config files, you still only need your shell to run the tests)
+You can download the _xdgnj_ executable from the releases page. Alternatively, you can use the nix flake or build it from scratch using _cabal_, _stack_, or the provided docker image in _build/_. (To be clear, this is just a tool that will help you automatically generate the config files, you still only need your shell to run the tests)
 
 Available commands:
 ```sh
 xdgnj add # Adds a new configuration
 xdgnj prev programs/FILE.json # Preview the configuration for a program
+xdgnj edit programs/FILE.json # Edit the configuration for a program
 xdgnj run # Mostly the same as running the shell script
+```
+
+#### Using nix
+
+If you're using [nix](https://nixos.org) and have flakes turned on, you can just run the following command:
+```sh
+nix run github:b3nj5m1n/xdg-ninja#xdgnj-bin ...
 ```
 
 #### Building from scratch
